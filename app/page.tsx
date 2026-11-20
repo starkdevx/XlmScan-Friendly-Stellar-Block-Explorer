@@ -76,12 +76,12 @@ export default function HomePage() {
   const [seedInput, setSeedInput] = useState("");
 
   return (
-    <div className="relative mx-auto max-w-4xl py-10 sm:py-16">
+    <div className="relative mx-auto max-w-5xl py-10 sm:py-16">
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute -top-20 left-1/2 -z-10 h-80 w-[620px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-indigo-500/25 via-cyan-400/20 to-purple-500/25 blur-3xl opacity-75 dark:opacity-40" />
 
       {/* Hero Section */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-4 max-w-5xl mx-auto px-2">
         {/* Modern Pill Badge */}
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-xs backdrop-blur-md dark:border-indigo-800/60 dark:bg-zinc-900/80 dark:text-indigo-300">
           <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
@@ -92,24 +92,22 @@ export default function HomePage() {
           </span>
         </div>
 
-        {/* Hero Headline */}
-        <h1 className="text-4xl font-black tracking-tight sm:text-6xl sm:leading-[1.12]">
+        {/* Hero Headline (Appears in 1 line on desktop) */}
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:whitespace-nowrap">
           Stellar, explained{" "}
           <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent dark:from-indigo-400 dark:via-cyan-300 dark:to-cyan-400">
             in plain English.
           </span>
         </h1>
 
-        {/* Hero Subtitle */}
-        <p className="mx-auto max-w-xl text-base font-normal leading-relaxed text-zinc-600 sm:text-lg dark:text-zinc-400">
-          Understand what is happening on Stellar, simply. Paste any wallet
-          address, transaction hash, or ask conversational questions backed by
-          verified on-chain records.
+        {/* Hero Subtitle (Wider width to appear in 1 line on desktop) */}
+        <p className="mx-auto max-w-4xl text-base sm:text-lg font-normal leading-relaxed text-zinc-600 dark:text-zinc-400 md:whitespace-nowrap">
+          Understand what is happening on Stellar, simply. Paste any wallet address, transaction hash, or ask a question.
         </p>
       </div>
 
-      {/* Main Search Component */}
-      <div className="mt-10">
+      {/* Main Search Component (Constrained to max-w-3xl) */}
+      <div className="mt-10 max-w-3xl mx-auto">
         <SearchBar
           key={`${seedInput}-${network}`}
           initialValue={seedInput}
