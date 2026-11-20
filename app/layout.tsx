@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "XLMSCAN — Ask Stellar Anything",
   description:
-    "Plain-English Stellar blockchain explorer. Look up wallets, transactions, and ask natural-language questions backed by verified on-chain data.",
+    "Plain-English Stellar blockchain explorer. Look up wallets, transactions, and ask a question in natural language.",
 };
 
 export default function RootLayout({
