@@ -17,6 +17,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 cosmic-grid selection:bg-indigo-500 selection:text-white">
         <Suspense fallback={<div className="h-14 border-b border-zinc-200 bg-white" />}>
           <NetworkProvider>

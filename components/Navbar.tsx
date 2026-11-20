@@ -86,11 +86,11 @@ export function Navbar() {
           className="flex items-center gap-2.5 transition hover:opacity-95"
         >
           <XlmScanLogo />
-          <div className="flex items-center gap-0.5 tracking-tighter">
-            <span className="text-lg font-black text-zinc-950 dark:text-zinc-50">
+          <div className="flex items-center gap-0.5 tracking-tight font-heading">
+            <span className="text-xl font-bold text-zinc-950 dark:text-zinc-50">
               XLM
             </span>
-            <span className="text-lg font-black bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-cyan-400">
+            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-cyan-400">
               SCAN
             </span>
           </div>

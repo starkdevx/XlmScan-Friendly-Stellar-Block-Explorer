@@ -218,7 +218,7 @@ export function SearchBar({
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="inline-flex h-10 sm:h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-cyan-600 px-5 sm:px-6 text-xs sm:text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-150 hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-600/35 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100"
+            className="inline-flex h-10 sm:h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-cyan-600 px-5 sm:px-6 text-xs sm:text-sm font-heading font-bold text-white shadow-md shadow-indigo-600/25 transition-all duration-150 hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-600/35 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100"
           >
             {loading ? (
               <>
