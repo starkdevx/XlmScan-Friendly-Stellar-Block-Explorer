@@ -93,8 +93,8 @@ export default function HomePage() {
         </div>
 
         {/* Hero Headline (Appears in 1 line on desktop) */}
-        <h1 className="text-2xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:whitespace-nowrap">
-          Stellar, explained{" "}
+        <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black tracking-tight leading-tight sm:whitespace-nowrap">
+          Stellar Chain, explained{" "}
           <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent dark:from-indigo-400 dark:via-cyan-300 dark:to-cyan-400">
             in plain English.
           </span>
