@@ -6,7 +6,7 @@ An on-demand, natural-language Stellar block explorer that translates Stellar ac
 
 - **Data Layer (`lib/stellar/`)**: On-demand retrieval with no continuous blockchain indexing. Supports **Alchemy Stellar RPC & Data API** (primary when `ALCHEMY_API_KEY` is set), **QuickNode Stellar RPC & Horizon** (secondary fallback), and **Public Stellar Horizon / Soroban RPC** (out-of-the-box fallback).
 - **Interpretation Layer (`lib/stellar/transaction-decoder.ts`, `operation-decoder.ts`, `event-decoder.ts`, `humanizer.ts`)**: Uses `@stellar/stellar-sdk` for XDR decoding and deterministic templates for human-readable explanations (including multi-operation transactions, failed transactions, and SEP-41 Soroban token events).
-- **Natural-Language Query Pipeline (`lib/ai/`)**: Uses structured-output LLM intent parsing via **Groq** (`llama-3.1-8b-instant` + optional `meta-llama/llama-prompt-guard-2-86m` safety guard) and **Google Gemini** (`gemini-3.5-flash-lite`) with 2:1 weighted round-robin routing, automatic 429 failover, and a deterministic rule-based fallback. Zod validates every intent, and amounts/counts are always computed deterministically from on-chain records.
+- **Natural-Language Query Pipeline (`lib/ai/`)**: Uses structured-output LLM intent parsing via **Google Gemini** (`gemini-3.5-flash-lite`) and **Groq** (`qwen/qwen3.8-27b`) with automatic 429 failover and a deterministic rule-based fallback. Zod validates every intent, and amounts/counts are always computed deterministically from on-chain records.
 - **Caching & Persistence (`lib/db/`, `lib/cache/`)**: MongoDB Atlas + Mongoose (`transactions`, `accounts`, `queryCache`, `rateLimits`, `labels`) with an automatic in-memory fallback when `MONGODB_URI` is not set.
 
 ## Getting Started

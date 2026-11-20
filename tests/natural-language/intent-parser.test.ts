@@ -73,31 +73,39 @@ describe("Natural-language intent parser", () => {
     );
   });
 
-  it("routes requests 2:1 between Groq and Gemini in weighted_round_robin", () => {
+  it("defaults to failover (Gemini primary, Groq burst/fallback)", () => {
+    resetAiRouterState();
+    expect(selectProviderOrder(true, true, "failover")).toEqual([
+      "gemini",
+      "groq",
+    ]);
+  });
+
+  it("routes requests 2:1 between Gemini and Groq in weighted_round_robin", () => {
     resetAiRouterState();
     expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
-      "groq",
       "gemini",
-    ]);
-    expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
       "groq",
-      "gemini",
     ]);
     expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
       "gemini",
       "groq",
+    ]);
+    expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
+      "groq",
+      "gemini",
     ]);
   });
 
   it("alternates 1:1 in round_robin mode", () => {
     resetAiRouterState();
     expect(selectProviderOrder(true, true, "round_robin")).toEqual([
-      "groq",
       "gemini",
+      "groq",
     ]);
     expect(selectProviderOrder(true, true, "round_robin")).toEqual([
-      "gemini",
       "groq",
+      "gemini",
     ]);
   });
 });

@@ -24,7 +24,7 @@ export function resetAiRouterState(): void {
 export function selectProviderOrder(
   hasGroq: boolean,
   hasGemini: boolean,
-  strategy = process.env.AI_ROUTING_STRATEGY ?? "weighted_round_robin",
+  strategy = process.env.AI_ROUTING_STRATEGY ?? "failover",
   nowMs = Date.now()
 ): AiProvider[] {
   const groqReady = hasGroq && providerCooldownUntil.groq <= nowMs;
@@ -34,18 +34,18 @@ export function selectProviderOrder(
   if (groqReady && !geminiReady) return ["groq"];
   if (!groqReady && geminiReady) return ["gemini"];
 
-  if (strategy === "failover") {
-    return ["groq", "gemini"];
-  }
-
   if (strategy === "round_robin") {
     const idx = routerCounter++;
-    return idx % 2 === 0 ? ["groq", "gemini"] : ["gemini", "groq"];
+    return idx % 2 === 0 ? ["gemini", "groq"] : ["groq", "gemini"];
   }
 
-  // Default: weighted_round_robin (2 Groq : 1 Gemini, matching 30 RPM : 15 RPM)
-  const slot = routerCounter++ % 3;
-  return slot === 2 ? ["gemini", "groq"] : ["groq", "gemini"];
+  if (strategy === "weighted_round_robin") {
+    const slot = routerCounter++ % 3;
+    return slot === 2 ? ["groq", "gemini"] : ["gemini", "groq"];
+  }
+
+  // Default: failover (Gemini primary -> Groq qwen/qwen3.8-27b for 30 RPM burst/429 overflow)
+  return ["gemini", "groq"];
 }
 
 function resolveRelativeTimeRange(
@@ -314,42 +314,6 @@ function buildIntentSystemPrompt(
     .join("\n");
 }
 
-/**
- * Optional safety check using Groq's meta-llama/llama-prompt-guard-2-86m classifier.
- * Returns false only if the guard explicitly flags the input as malicious/jailbreak.
- */
-async function checkPromptSafetyWithGroq(question: string): Promise<boolean> {
-  const apiKey = process.env.GROQ_API_KEY?.trim();
-  const guardModel = process.env.GROQ_GUARD_MODEL?.trim();
-  if (!apiKey || !guardModel) return true;
-
-  try {
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: guardModel,
-        messages: [{ role: "user", content: question }],
-      }),
-    });
-
-    if (!res.ok) return true;
-    const data = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const label = data.choices?.[0]?.message?.content?.trim().toUpperCase() ?? "";
-    if (label.includes("MALICIOUS") || label.includes("JAILBREAK")) {
-      return false;
-    }
-  } catch {
-    // Non-blocking: fail open if guard endpoint is unavailable
-  }
-  return true;
-}
-
 async function parseWithGroq(
   question: string,
   context?: { address?: string; txHash?: string },
@@ -358,7 +322,7 @@ async function parseWithGroq(
   const apiKey = process.env.GROQ_API_KEY?.trim();
   if (!apiKey) return null;
 
-  const model = process.env.GROQ_MODEL?.trim() || "llama-3.1-8b-instant";
+  const model = process.env.GROQ_MODEL?.trim() || "qwen/qwen3.8-27b";
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -440,15 +404,6 @@ export async function parseNaturalLanguageIntent(
   question: string,
   context?: { address?: string; txHash?: string }
 ): Promise<ParsedIntent> {
-  const isSafe = await checkPromptSafetyWithGroq(question);
-  if (!isSafe) {
-    return ParsedIntentSchema.parse({
-      intent: "ambiguous",
-      clarification_needed:
-        "Your query could not be processed. Please ask a direct question about a Stellar wallet or transaction.",
-    });
-  }
-
   const hasGroq = Boolean(process.env.GROQ_API_KEY?.trim());
   const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
   const order = selectProviderOrder(hasGroq, hasGemini);
