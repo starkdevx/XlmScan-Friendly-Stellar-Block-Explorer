@@ -68,19 +68,21 @@ export default function TransactionPage() {
   }, [hash, network]);
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-72 w-[560px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-indigo-500/20 via-cyan-400/15 to-purple-500/20 blur-3xl opacity-60" />
+
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to search
       </Link>
 
       {loading && (
-        <div className="flex items-center justify-center rounded-2xl border border-zinc-200 bg-white p-12 dark:border-zinc-800 dark:bg-zinc-900">
-          <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
-          <span className="ml-2.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-white/10 bg-[#0d1324]/85 p-16 backdrop-blur-xl">
+          <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+          <span className="font-heading text-sm font-medium text-slate-300">
             Decoding transaction from Stellar...
           </span>
         </div>
@@ -88,9 +90,9 @@ export default function TransactionPage() {
 
       {error && !loading && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-            <div className="font-semibold">Transaction unavailable</div>
-            <p className="mt-1">{error}</p>
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-200 backdrop-blur-md">
+            <div className="font-heading font-bold">Transaction unavailable</div>
+            <p className="mt-1 text-amber-300/90">{error}</p>
           </div>
           {errorCoverage && <HistoryWarning coverage={errorCoverage} />}
         </div>

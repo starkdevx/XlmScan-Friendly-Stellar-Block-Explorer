@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, Wallet } from "lucide-react";
+import { Copy, Check, Wallet, Coins, Activity } from "lucide-react";
 import type { NaturalLanguageQueryResult } from "@/lib/ai/schemas";
 import type {
   AccountBalance,
@@ -53,16 +53,21 @@ export function AccountOverview({
 
   return (
     <div className="space-y-8">
-      {/* Account Header */}
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+      {/* Account Hero Card */}
+      <div className="animate-fade-up relative overflow-hidden rounded-3xl border border-white/10 bg-[#0d1324]/90 p-6 sm:p-7 shadow-2xl shadow-black/40 backdrop-blur-xl">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-500 via-cyan-400 to-purple-500" />
+
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Stellar Account · {network}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 text-cyan-300 ring-1 ring-cyan-400/30">
+              <Wallet className="h-4 w-4" />
+            </div>
+            <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-300">
+              Stellar Account ·{" "}
+              <span className="text-cyan-300">{network}</span>
             </span>
             {label && (
-              <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+              <span className="rounded-full bg-indigo-500/20 px-3 py-0.5 text-xs font-semibold text-indigo-200 ring-1 ring-indigo-400/30">
                 {label}
               </span>
             )}
@@ -71,26 +76,26 @@ export function AccountOverview({
           <button
             type="button"
             onClick={copyAddress}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-1 font-mono text-xs text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-slate-300 transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
           >
             <span className="max-w-[200px] truncate sm:max-w-none">
               {address}
             </span>
             {copied ? (
-              <Check className="h-3.5 w-3.5 text-emerald-600" />
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className="h-3.5 w-3.5 text-slate-400" />
             )}
           </button>
         </div>
 
-        <p className="mt-4 text-lg font-medium leading-relaxed text-zinc-900 dark:text-zinc-100">
+        <p className="mt-5 font-heading text-lg sm:text-xl font-semibold leading-relaxed text-white">
           {summary}
         </p>
 
         {/* Contextual Follow-up Question Input */}
-        <div className="mt-6 border-t border-zinc-100 pt-5 dark:border-zinc-800">
-          <div className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <div className="mb-2.5 text-xs font-semibold text-slate-400">
             Ask this wallet anything (no need to paste the address again)
           </div>
           <SearchBar
@@ -107,15 +112,15 @@ export function AccountOverview({
       </div>
 
       {nlResult && (
-        <div className="space-y-2">
+        <div className="animate-fade-up space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="font-heading text-sm font-bold uppercase tracking-wider text-cyan-300">
               Answer for this wallet
             </h2>
             <button
               type="button"
               onClick={() => setNlResult(null)}
-              className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+              className="rounded-lg px-2.5 py-1 text-xs font-medium text-slate-400 transition hover:bg-white/5 hover:text-white"
             >
               Clear
             </button>
@@ -125,13 +130,16 @@ export function AccountOverview({
       )}
 
       {/* Balances */}
-      <section className="space-y-3">
+      <section className="animate-fade-up-delay-1 space-y-3.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            Current balances
-          </h2>
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-cyan-400" />
+            <h2 className="font-heading text-base font-bold text-white">
+              Current balances
+            </h2>
+          </div>
           {asOfLedger != null && (
-            <span className="text-xs text-zinc-500">
+            <span className="font-mono text-xs text-slate-400">
               As of ledger {asOfLedger.toLocaleString("en-US")}
             </span>
           )}
@@ -140,12 +148,15 @@ export function AccountOverview({
       </section>
 
       {/* Recent Transfers */}
-      <section className="space-y-3">
+      <section className="animate-fade-up-delay-2 space-y-3.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            Recent transfer activity
-          </h2>
-          <span className="text-xs text-zinc-500">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-indigo-400" />
+            <h2 className="font-heading text-base font-bold text-white">
+              Recent transfer activity
+            </h2>
+          </div>
+          <span className="text-xs text-slate-400">
             Showing verified transfer records
           </span>
         </div>

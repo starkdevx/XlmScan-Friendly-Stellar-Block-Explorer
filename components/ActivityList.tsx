@@ -23,14 +23,14 @@ export function ActivityList({
 }: ActivityListProps) {
   if (transfers.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+      <div className="rounded-2xl border border-dashed border-white/15 bg-[#0b101d]/60 p-8 text-center text-sm text-slate-400">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/10 bg-[#0d1324]/85 shadow-xl shadow-black/30 backdrop-blur-md">
       {transfers.map((t) => {
         const isIncoming = t.direction === "incoming";
         const isSelf = t.direction === "self";
@@ -39,18 +39,18 @@ export function ActivityList({
         return (
           <div
             key={t.id}
-            className="flex flex-col gap-2 p-4 transition-colors hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-zinc-800/50"
+            className="group flex flex-col gap-2.5 p-4 transition-all duration-150 hover:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3.5">
               <div
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition-transform duration-150 group-hover:scale-105 ${
                   !t.successful
-                    ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
+                    ? "bg-rose-500/15 text-rose-400 ring-rose-500/30"
                     : isIncoming
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                    ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30"
                     : isSelf
-                    ? "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                    : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                    ? "bg-cyan-500/15 text-cyan-300 ring-cyan-500/30"
+                    : "bg-amber-500/15 text-amber-300 ring-amber-500/30"
                 }`}
               >
                 {!t.successful ? (
@@ -64,7 +64,7 @@ export function ActivityList({
                 )}
               </div>
               <div>
-                <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-100">
                   <span>
                     {!t.successful
                       ? "Failed transfer"
@@ -73,29 +73,31 @@ export function ActivityList({
                       : isSelf
                       ? "Self transfer"
                       : "Sent"}{" "}
-                    {formatAmount(t.amount)} {t.asset.code}
+                    <span className="font-heading font-semibold text-white">
+                      {formatAmount(t.amount)} {t.asset.code}
+                    </span>
                   </span>
                   {counterparty && (
-                    <span className="text-zinc-500 dark:text-zinc-400">
+                    <span className="text-slate-400">
                       {isIncoming ? "from" : "to"}{" "}
                       <Link
                         href={`/account/${counterparty}?network=${network}`}
-                        className="font-mono text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                        className="rounded-md bg-white/5 px-1.5 py-0.5 font-mono text-xs text-cyan-300 transition hover:bg-cyan-500/15 hover:text-cyan-200"
                       >
                         {shortenAddress(counterparty)}
                       </Link>
                     </span>
                   )}
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
                   <span>{formatDateTime(t.timestamp)}</span>
-                  <span className="capitalize">
+                  <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-300">
                     {t.operationType.replace(/_/g, " ")}
                   </span>
                   {t.txHash && (
                     <Link
                       href={`/transaction/${t.txHash}?network=${network}`}
-                      className="font-mono text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="font-mono text-indigo-300 transition hover:text-cyan-300 hover:underline"
                     >
                       Tx {shortenAddress(t.txHash, 5)}
                     </Link>
@@ -105,16 +107,19 @@ export function ActivityList({
             </div>
 
             <div
-              className={`text-sm font-semibold tabular-nums sm:text-right ${
+              className={`font-heading text-base font-bold tabular-nums sm:text-right ${
                 !t.successful
-                  ? "text-zinc-400 line-through"
+                  ? "text-slate-500 line-through"
                   : isIncoming
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-zinc-900 dark:text-zinc-100"
+                  ? "text-emerald-400"
+                  : "text-slate-100"
               }`}
             >
               {isIncoming ? "+" : isSelf ? "" : "-"}
-              {formatAmount(t.amount)} {t.asset.code}
+              {formatAmount(t.amount)}{" "}
+              <span className="text-xs font-semibold text-slate-400">
+                {t.asset.code}
+              </span>
             </div>
           </div>
         );

@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -25,8 +25,12 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 cosmic-grid selection:bg-indigo-500 selection:text-white">
-        <Suspense fallback={<div className="h-14 border-b border-zinc-200 bg-white" />}>
+      <body className="min-h-screen bg-[#06080f] text-slate-50 cosmic-grid selection:bg-cyan-500/30 selection:text-cyan-200">
+        <Suspense
+          fallback={
+            <div className="h-14 border-b border-white/10 bg-[#06080f]/90" />
+          }
+        >
           <NetworkProvider>
             <Navbar />
             <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">{children}</main>
