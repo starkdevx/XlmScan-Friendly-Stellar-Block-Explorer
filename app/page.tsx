@@ -36,12 +36,12 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-3xl py-10 sm:py-16">
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50/60 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300">
+        {/* <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50/60 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300">
           <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
           <span>Stellar Plain-English Explorer</span>
-        </div>
+        </div> */}
         <h1 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-zinc-50">
-          XLMSCAN
+          XLMSCAN Stellar Chain Explorer
         </h1>
         <p className="mt-3 text-base text-zinc-600 dark:text-zinc-400">
           Understand what is happening on Stellar, simply. Paste any wallet
