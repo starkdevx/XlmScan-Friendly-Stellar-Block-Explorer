@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { Keypair } from "@stellar/stellar-sdk";
-import { parseIntentDeterministic } from "@/lib/ai/intent-parser";
+import {
+  parseIntentDeterministic,
+  resetAiRouterState,
+  selectProviderOrder,
+} from "@/lib/ai/intent-parser";
 import { buildQueryCacheKey } from "@/lib/ai/query-executor";
 
 describe("Natural-language intent parser", () => {
@@ -67,5 +71,33 @@ describe("Natural-language intent parser", () => {
     expect(buildQueryCacheKey("mainnet", a)).toBe(
       buildQueryCacheKey("mainnet", b)
     );
+  });
+
+  it("routes requests 2:1 between Groq and Gemini in weighted_round_robin", () => {
+    resetAiRouterState();
+    expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
+      "groq",
+      "gemini",
+    ]);
+    expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
+      "groq",
+      "gemini",
+    ]);
+    expect(selectProviderOrder(true, true, "weighted_round_robin")).toEqual([
+      "gemini",
+      "groq",
+    ]);
+  });
+
+  it("alternates 1:1 in round_robin mode", () => {
+    resetAiRouterState();
+    expect(selectProviderOrder(true, true, "round_robin")).toEqual([
+      "groq",
+      "gemini",
+    ]);
+    expect(selectProviderOrder(true, true, "round_robin")).toEqual([
+      "gemini",
+      "groq",
+    ]);
   });
 });

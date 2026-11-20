@@ -6,6 +6,48 @@ import {
 } from "../stellar/validation";
 import { ParsedIntentSchema, type ParsedIntent } from "./schemas";
 
+export type AiProvider = "groq" | "gemini";
+
+const COOLDOWN_MS = 60_000;
+const providerCooldownUntil: Record<AiProvider, number> = {
+  groq: 0,
+  gemini: 0,
+};
+let routerCounter = 0;
+
+export function resetAiRouterState(): void {
+  routerCounter = 0;
+  providerCooldownUntil.groq = 0;
+  providerCooldownUntil.gemini = 0;
+}
+
+export function selectProviderOrder(
+  hasGroq: boolean,
+  hasGemini: boolean,
+  strategy = process.env.AI_ROUTING_STRATEGY ?? "weighted_round_robin",
+  nowMs = Date.now()
+): AiProvider[] {
+  const groqReady = hasGroq && providerCooldownUntil.groq <= nowMs;
+  const geminiReady = hasGemini && providerCooldownUntil.gemini <= nowMs;
+
+  if (!groqReady && !geminiReady) return [];
+  if (groqReady && !geminiReady) return ["groq"];
+  if (!groqReady && geminiReady) return ["gemini"];
+
+  if (strategy === "failover") {
+    return ["groq", "gemini"];
+  }
+
+  if (strategy === "round_robin") {
+    const idx = routerCounter++;
+    return idx % 2 === 0 ? ["groq", "gemini"] : ["gemini", "groq"];
+  }
+
+  // Default: weighted_round_robin (2 Groq : 1 Gemini, matching 30 RPM : 15 RPM)
+  const slot = routerCounter++ % 3;
+  return slot === 2 ? ["gemini", "groq"] : ["groq", "gemini"];
+}
+
 function resolveRelativeTimeRange(
   text: string,
   now: Date
@@ -43,7 +85,11 @@ function resolveRelativeTimeRange(
     };
   }
 
-  if (/\b(?:this\s+week|last\s+week|past\s+week|7\s+days|seven\s+days)\b/.test(lower)) {
+  if (
+    /\b(?:this\s+week|last\s+week|past\s+week|7\s+days|seven\s+days)\b/.test(
+      lower
+    )
+  ) {
     const start = new Date(now.getTime() - 7 * 86_400_000);
     return {
       from: start.toISOString(),
@@ -52,7 +98,9 @@ function resolveRelativeTimeRange(
     };
   }
 
-  if (/\b(?:this\s+month|last\s+month|30\s+days|thirty\s+days)\b/.test(lower)) {
+  if (
+    /\b(?:this\s+month|last\s+month|30\s+days|thirty\s+days)\b/.test(lower)
+  ) {
     const start = new Date(now.getTime() - 30 * 86_400_000);
     return {
       from: start.toISOString(),
@@ -65,11 +113,22 @@ function resolveRelativeTimeRange(
 }
 
 function extractAssetCode(text: string): { code: string } | undefined {
-  const commonAssets = ["USDC", "XLM", "EURC", "USDT", "AQUA", "yXLM", "BTC", "ETH"];
+  const commonAssets = [
+    "USDC",
+    "XLM",
+    "EURC",
+    "USDT",
+    "AQUA",
+    "yXLM",
+    "BTC",
+    "ETH",
+  ];
   for (const code of commonAssets) {
     const regex = new RegExp(`\\b${code}\\b`, "i");
     if (regex.test(text)) {
-      return { code: code.toUpperCase() === "YXLM" ? "yXLM" : code.toUpperCase() };
+      return {
+        code: code.toUpperCase() === "YXLM" ? "yXLM" : code.toUpperCase(),
+      };
     }
   }
   const customMatch = text.match(/\bonly\s+([A-Za-z0-9]{2,12})\b/i);
@@ -136,7 +195,6 @@ export function parseIntentDeterministic(
   const timeRange = resolveRelativeTimeRange(question, now);
   const limit = extractLimit(question);
 
-  // Transaction questions
   if (
     txHash &&
     (/\b(?:transaction|tx|succeed|succeeded|fail|failed|happen|happened|explain)\b/.test(
@@ -152,7 +210,6 @@ export function parseIntentDeterministic(
     });
   }
 
-  // Contract event questions
   if (contractId && isValidContractId(contractId)) {
     return ParsedIntentSchema.parse({
       intent: "contract_events",
@@ -163,7 +220,6 @@ export function parseIntentDeterministic(
     });
   }
 
-  // Balance questions
   if (
     /\b(?:balance|balances|hold|holds|holding|have|has|how much.*in this wallet)\b/.test(
       lower
@@ -186,7 +242,6 @@ export function parseIntentDeterministic(
     });
   }
 
-  // Account transfer questions
   if (!address) {
     return ParsedIntentSchema.parse({
       intent: "ambiguous",
@@ -202,7 +257,8 @@ export function parseIntentDeterministic(
     direction = "outgoing";
   }
 
-  let aggregation: "sum" | "count" | "list" | "senders" | "failed_count" = "list";
+  let aggregation: "sum" | "count" | "list" | "senders" | "failed_count" =
+    "list";
   if (/\b(?:how many.*fail|failed)\b/.test(lower)) {
     aggregation = "failed_count";
   } else if (/\bwho\b/.test(lower)) {
@@ -224,20 +280,16 @@ export function parseIntentDeterministic(
   });
 }
 
-async function parseWithOpenAI(
-  question: string,
+function buildIntentSystemPrompt(
   context?: { address?: string; txHash?: string },
   now = new Date()
-): Promise<ParsedIntent | null> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) return null;
-
-  const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
-  const systemPrompt = [
+): string {
+  return [
     "You are an intent parser for a read-only Stellar blockchain explorer.",
     "Extract structured JSON matching this exact schema:",
     JSON.stringify({
-      intent: "account_transfers | account_balances | transaction_details | contract_events | ambiguous",
+      intent:
+        "account_transfers | account_balances | transaction_details | contract_events | ambiguous",
       address: "optional G... Stellar account",
       txHash: "optional 64-char hex transaction hash",
       contractId: "optional C... contract ID",
@@ -249,15 +301,65 @@ async function parseWithOpenAI(
       clarification_needed: "optional string if ambiguous",
     }),
     `Current UTC time: ${now.toISOString()}.`,
-    context?.address ? `Current page wallet address context: ${context.address}` : "",
-    context?.txHash ? `Current page transaction hash context: ${context.txHash}` : "",
+    context?.address
+      ? `Current page wallet address context: ${context.address}`
+      : "",
+    context?.txHash
+      ? `Current page transaction hash context: ${context.txHash}`
+      : "",
     "If the user asks about a wallet without providing an address and there is no address context, return intent='ambiguous' with clarification_needed.",
     "Return ONLY valid JSON.",
   ]
     .filter(Boolean)
     .join("\n");
+}
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+/**
+ * Optional safety check using Groq's meta-llama/llama-prompt-guard-2-86m classifier.
+ * Returns false only if the guard explicitly flags the input as malicious/jailbreak.
+ */
+async function checkPromptSafetyWithGroq(question: string): Promise<boolean> {
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  const guardModel = process.env.GROQ_GUARD_MODEL?.trim();
+  if (!apiKey || !guardModel) return true;
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: guardModel,
+        messages: [{ role: "user", content: question }],
+      }),
+    });
+
+    if (!res.ok) return true;
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const label = data.choices?.[0]?.message?.content?.trim().toUpperCase() ?? "";
+    if (label.includes("MALICIOUS") || label.includes("JAILBREAK")) {
+      return false;
+    }
+  } catch {
+    // Non-blocking: fail open if guard endpoint is unavailable
+  }
+  return true;
+}
+
+async function parseWithGroq(
+  question: string,
+  context?: { address?: string; txHash?: string },
+  now = new Date()
+): Promise<ParsedIntent | null> {
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  const model = process.env.GROQ_MODEL?.trim() || "llama-3.1-8b-instant";
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -268,11 +370,16 @@ async function parseWithOpenAI(
       temperature: 0,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: buildIntentSystemPrompt(context, now) },
         { role: "user", content: question },
       ],
     }),
   });
+
+  if (res.status === 429 || res.status >= 500) {
+    providerCooldownUntil.groq = Date.now() + COOLDOWN_MS;
+    return null;
+  }
 
   if (!res.ok) return null;
   const data = (await res.json()) as {
@@ -293,17 +400,8 @@ async function parseWithGemini(
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) return null;
 
-  const model = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
-  const prompt = [
-    "Extract structured JSON intent for a Stellar blockchain explorer.",
-    `Current UTC time: ${now.toISOString()}.`,
-    context?.address ? `Wallet context: ${context.address}` : "",
-    context?.txHash ? `Tx context: ${context.txHash}` : "",
-    `User question: ${question}`,
-    "Return JSON with fields: intent (account_transfers|account_balances|transaction_details|contract_events|ambiguous), address?, txHash?, contractId?, direction (incoming|outgoing|all), asset? ({code}), time_range? ({from,to,label}), aggregation (sum|count|list|senders|failed_count), limit?, clarification_needed?.",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash-lite";
+  const prompt = `${buildIntentSystemPrompt(context, now)}\n\nUser question: ${question}`;
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
@@ -322,6 +420,11 @@ async function parseWithGemini(
     }
   );
 
+  if (res.status === 429 || res.status >= 500) {
+    providerCooldownUntil.gemini = Date.now() + COOLDOWN_MS;
+    return null;
+  }
+
   if (!res.ok) return null;
   const data = (await res.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
@@ -337,22 +440,46 @@ export async function parseNaturalLanguageIntent(
   question: string,
   context?: { address?: string; txHash?: string }
 ): Promise<ParsedIntent> {
-  try {
-    const llmResult =
-      (await parseWithOpenAI(question, context)) ??
-      (await parseWithGemini(question, context));
-    if (llmResult) {
-      // Ensure context address/hash is preserved if LLM omitted it
-      if (!llmResult.address && context?.address && llmResult.intent !== "ambiguous") {
-        llmResult.address = context.address;
+  const isSafe = await checkPromptSafetyWithGroq(question);
+  if (!isSafe) {
+    return ParsedIntentSchema.parse({
+      intent: "ambiguous",
+      clarification_needed:
+        "Your query could not be processed. Please ask a direct question about a Stellar wallet or transaction.",
+    });
+  }
+
+  const hasGroq = Boolean(process.env.GROQ_API_KEY?.trim());
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
+  const order = selectProviderOrder(hasGroq, hasGemini);
+
+  for (const provider of order) {
+    try {
+      const llmResult =
+        provider === "groq"
+          ? await parseWithGroq(question, context)
+          : await parseWithGemini(question, context);
+
+      if (llmResult) {
+        if (
+          !llmResult.address &&
+          context?.address &&
+          llmResult.intent !== "ambiguous"
+        ) {
+          llmResult.address = context.address;
+        }
+        if (
+          !llmResult.txHash &&
+          context?.txHash &&
+          llmResult.intent === "transaction_details"
+        ) {
+          llmResult.txHash = context.txHash;
+        }
+        return llmResult;
       }
-      if (!llmResult.txHash && context?.txHash && llmResult.intent === "transaction_details") {
-        llmResult.txHash = context.txHash;
-      }
-      return llmResult;
+    } catch {
+      // Try next provider in order, then fall back to deterministic parser
     }
-  } catch {
-    // Fall back to deterministic parser if LLM call or schema validation fails
   }
 
   return parseIntentDeterministic(question, context);
