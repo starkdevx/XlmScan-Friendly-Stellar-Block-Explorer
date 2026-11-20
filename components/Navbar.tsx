@@ -19,9 +19,6 @@ export function Navbar() {
             X
           </span>
           <span className="text-base font-black tracking-tighter">XLMSCAN</span>
-          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-            v0
-          </span>
         </Link>
 
         {/* Network switch in the top bar */}

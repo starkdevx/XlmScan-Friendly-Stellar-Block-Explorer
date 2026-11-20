@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         contractId: classification.contractId,
         network,
         message:
-          "Soroban contract IDs are recognized. Full contract state inspection is planned for v0.1; you can ask about recent events for this contract.",
+          "Soroban contract IDs are recognized. Full contract state inspection is planned for an upcoming release; you can ask about recent events for this contract.",
       });
     }
 

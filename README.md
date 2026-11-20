@@ -1,4 +1,4 @@
-# XLMSCAN — Stellar Plain-English Explorer (v0)
+# XLMSCAN — Stellar Plain-English Explorer
 
 An on-demand, natural-language Stellar block explorer that translates Stellar accounts, transactions, and wallet questions into clear, verified plain-English explanations.
 

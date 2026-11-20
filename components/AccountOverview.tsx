@@ -96,7 +96,11 @@ export function AccountOverview({
           <SearchBar
             network={network}
             context={{ address }}
-            placeholder='e.g. "How much USDC did this wallet receive this week?" or "Show its last 5 transfers"'
+            questions={[
+              "How much USDC did this wallet receive this week?",
+              "Tell me all tokens for this wallet address?",
+              "Show the last 5 transfers for this wallet?",
+            ]}
             onQueryResult={(res) => setNlResult(res)}
           />
         </div>
